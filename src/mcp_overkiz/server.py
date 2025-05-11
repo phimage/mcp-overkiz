@@ -1,11 +1,12 @@
 import asyncio
 import os
+import urllib.parse
 
 from mcp.server.models import InitializationOptions
 import mcp.types as types
 from mcp.server import NotificationOptions, Server
-from pydantic import AnyUrl
 import mcp.server.stdio
+from pydantic import AnyUrl
 
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.models import Command
@@ -71,9 +72,12 @@ async def handle_list_resources() -> list[types.Resource]:
             except:
                 pass
                 
+            # URL encode the light name to handle special characters in URIs
+            encoded_light_name = urllib.parse.quote(light_name)
+                
             resources.append(
                 types.Resource(
-                    uri=AnyUrl(f"light://{light_name}"),
+                    uri=AnyUrl(f"light://{encoded_light_name}"),
                     name=f"Light: {light_name}",
                     description=f"Overkiz light device: {light_name} (Status: {state})",
                     mimeType="application/json",
@@ -89,7 +93,10 @@ async def handle_read_resource(uri: AnyUrl) -> str:
     The light name is extracted from the URI host component.
     """
     if uri.scheme == "light":
-        light_name = str(uri).replace("light://", "")
+        # Extract and URL decode the light name
+        encoded_light_name = str(uri).replace("light://", "")
+        light_name = urllib.parse.unquote(encoded_light_name)
+        
         if light_name not in light_devices:
             raise ValueError(f"Light not found: {light_name}")
             
@@ -145,6 +152,17 @@ async def handle_list_tools() -> list[types.Tool]:
                 },
             ),
             types.Tool(
+                name="light-status",
+                description="Get the status of a specific light by name",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "The name of the light to check status"},
+                    },
+                    "required": ["name"],
+                },
+            ),
+            types.Tool(
                 name="light-on",
                 description="Turn on a light by name",
                 inputSchema={
@@ -189,8 +207,20 @@ async def handle_call_tool(
         
         # Get the latest status for all lights
         light_info = []
-        for light_name, device in light_devices.items(): 
-            light_info.append(f"- {light_name}")
+        for light_name, device in light_devices.items():
+            try:
+                # Get the latest device state
+                states = await overkiz_client.get_state(device.device_url)
+                # Find the on/off state
+                state = "Unknown"
+                for state_obj in states:
+                    if state_obj.name == "core:OnOffState":
+                        state = state_obj.value
+                        break
+                        
+                light_info.append(f"- {light_name}: {state}")
+            except Exception:
+                light_info.append(f"- {light_name}: Status unavailable")
         
         return [
             types.TextContent(
@@ -198,6 +228,56 @@ async def handle_call_tool(
                 text="Available lights:\n" + "\n".join(light_info),
             )
         ]
+    
+    elif name == "light-status":
+        if not arguments:
+            raise ValueError("Missing arguments")
+            
+        light_name = arguments.get("name")
+        if not light_name:
+            raise ValueError("Missing light name")
+            
+        if not light_devices:
+            return [
+                types.TextContent(
+                    type="text",
+                    text="No light devices available. Make sure the Overkiz client is properly initialized.",
+                )
+            ]
+            
+        if light_name not in light_devices:
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"Light '{light_name}' not found. Available lights: {', '.join(light_devices.keys())}",
+                )
+            ]
+            
+        # Get the status of the light
+        device = light_devices[light_name]
+        try:
+            # Refresh device status
+            states = await overkiz_client.get_state(device.device_url)
+            # Get the current state
+            state = "Unknown"
+            for state_obj in states:
+                if state_obj.name == "core:OnOffState":
+                    state = state_obj.value
+                    break
+                    
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"Light '{light_name}' is currently {state}",
+                )
+            ]
+        except Exception as e:
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"Failed to get status for light '{light_name}': {str(e)}",
+                )
+            ]
     
     elif name == "light-on":
         if not arguments:
@@ -323,7 +403,7 @@ async def main():
             write_stream,
             InitializationOptions(
                 server_name="overkiz-mcp",
-                server_version="0.1.0",
+                server_version="0.1.2",
                 capabilities=server.get_capabilities(
                     notification_options=NotificationOptions(),
                     experimental_capabilities={},

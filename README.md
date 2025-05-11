@@ -1,4 +1,4 @@
-# overkiz-mcp MCP server
+# mcp-overkiz MCP server
 
 MCP server for controlling lights using pyoverkiz
 
@@ -24,9 +24,9 @@ The server implements three tools:
 ## Configuration
 
 The server requires the following environment variables:
-- OVERKIZ_USERNAME: Your Overkiz/Somfy account username
-- OVERKIZ_PASSWORD: Your Overkiz/Somfy account password
-- OVERKIZ_SERVER: The Overkiz server to connect to (defaults to "somfy-europe")
+- `OVERKIZ_USERNAME`: Your Overkiz/Somfy account username
+- `OVERKIZ_PASSWORD`: Your Overkiz/Somfy account password
+- `OVERKIZ_SERVER`: The Overkiz server to connect to (defaults to "somfy-europe")
 
 ## Quickstart
 
@@ -34,19 +34,18 @@ The server requires the following environment variables:
 
 #### Claude Desktop
 
-On MacOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
-On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+- On MacOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
+- On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 
 <details>
-  <summary>Development/Unpublished Servers Configuration</summary>
+  <summary>Published Servers Configuration</summary>
   
   ```json
   "mcpServers": {
     "overkiz-mcp": {
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "run",
-        "/path/to/mcp-overkiz"
+        "mcp-overkiz"
       ],
       "env": {
         "OVERKIZ_USERNAME": "your-email@example.com",
@@ -59,13 +58,16 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 </details>
 
 <details>
-  <summary>Published Servers Configuration</summary>
+  <summary>Development/Unpublished Servers Configuration</summary>
   
   ```json
   "mcpServers": {
     "overkiz-mcp": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "run",
+        "--directory",
+        "/path/to/project/folder/mcp-overkiz",
         "mcp-overkiz"
       ],
       "env": {
