@@ -1,0 +1,20 @@
+[project]
+name = "mcp-overkiz"
+version = "0.1.0"
+description = "MCP server for controlling lights using overkiz"
+readme = "README.md"
+requires-python = ">=3.13.3"
+dependencies = [ 
+    "mcp>=1.7.1",
+    "pyoverkiz>=1.1.0",
+]
+[[project.authors]]
+name = "Eric Marchand"
+email = "eric.marchand.n7@gmail.com"
+
+[build-system]
+requires = [ "hatchling",]
+build-backend = "hatchling.build"
+
+[project.scripts]
+mcp- = "mcp_overkiz:main"
