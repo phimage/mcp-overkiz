@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/phimage-mcp-overkiz-badge.png)](https://mseep.ai/app/phimage-mcp-overkiz)
+
 # mcp-overkiz MCP server
 
 MCP server for controlling lights using pyoverkiz
