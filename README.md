@@ -1,32 +1,45 @@
 # mcp-overkiz MCP server
 
-MCP server for controlling lights using pyoverkiz
+MCP server for controlling lights and shutters (covers) using pyoverkiz
 
 ## Components
 
 ### Resources
 
-The server implements a light control system with:
-- Custom light:// URI scheme for accessing individual light devices
-- Each light resource has a name and current state (On/Off)
-- The resources are automatically discovered from your Overkiz/Somfy account
+The server implements a lights and covers control system with:
+- Custom `light://` URI scheme for accessing individual light devices — each resource has a name and current state (On/Off)
+- Custom `cover://` URI scheme for shutters/blinds — each resource has a name and current position (0% = closed, 100% = open)
+- Resources are automatically discovered from your Overkiz/Somfy/Flexom account
 
 ### Tools
 
-The server implements three tools:
-- list-lights: Lists all available lights and their current status
-  - Takes no arguments
-- light-on: Turns on a light by name
-  - Takes "name" as a required string argument
-- light-off: Turns off a light by name
-  - Takes "name" as a required string argument
+Lights:
+- `list-lights`: Lists all available lights and their current status
+- `light-on` / `light-off`: Turns a light on/off by name
+- `light-status`: Gets the status of a specific light by name
+
+Shutters / blinds (covers):
+- `list-covers`: Lists all available shutters and their current position
+- `cover-up`: Fully opens (raises) a shutter
+- `cover-down`: Fully closes (lowers) a shutter
+- `cover-stop`: Stops a shutter currently moving
+- `cover-position`: Moves a shutter to a specific position (0 = closed, 100 = open)
+- `cover-status`: Gets the current position of a specific shutter by name
+
+All cover tools take `name` as a required string argument; `cover-position` also takes `position` (integer 0-100).
 
 ## Configuration
 
 The server requires the following environment variables:
-- `OVERKIZ_USERNAME`: Your Overkiz/Somfy account username
+- `OVERKIZ_USERNAME`: Your Overkiz/Somfy account username (usually your email)
 - `OVERKIZ_PASSWORD`: Your Overkiz/Somfy account password
-- `OVERKIZ_SERVER`: The Overkiz server to connect to (defaults to "somfy-europe")
+- `OVERKIZ_SERVER`: The Overkiz server to connect to. Valid values: `somfy-europe` (default), `somfy-america`, `somfy-oceania`, `flexom` (Bouygues Flexom), `atlantic-cozytouch`, `brandt`, `hexaom-hexaconnect`, `sauter-cozytouch`, `thermor-cozytouch`, `ubiwizz`, `nexity`, `rexel`
+
+Tip: instead of pasting your password directly in your MCP config, write the three
+`OVERKIZ_*` values into a shell file (e.g. `~/Documents/mcp-overkiz.env` with no
+restrictive permissions) and load it from the MCP client env section when supported,
+or keep the env values inline — the password is only ever read locally by the server,
+never sent anywhere but the Overkiz cloud for your login.
 
 ## Quickstart
 
@@ -50,7 +63,7 @@ The server requires the following environment variables:
       "env": {
         "OVERKIZ_USERNAME": "your-email@example.com",
         "OVERKIZ_PASSWORD": "your-password",
-        "OVERKIZ_SERVER": "somfy-europe"
+        "OVERKIZ_SERVER": "flexom"
       }
     }
   }
@@ -73,7 +86,7 @@ The server requires the following environment variables:
       "env": {
         "OVERKIZ_USERNAME": "your-email@example.com",
         "OVERKIZ_PASSWORD": "your-password",
-        "OVERKIZ_SERVER": "somfy-europe"
+        "OVERKIZ_SERVER": "flexom"
       }
     }
   }
@@ -82,8 +95,16 @@ The server requires the following environment variables:
 
 ### Example Usage
 
-Once the server is running and connected to Claude, you can control your lights with commands like:
+Once the server is running and connected to your MCP client, you can control your home with commands like:
 
+Lights:
 - "List all my lights"
 - "Turn on the living room light"
 - "Turn off the bedroom light"
+
+Shutters:
+- "What's the position of my shutters?"
+- "Close all the shutters"
+- "Open the kitchen shutter"
+- "Set the living room shutter to 50%"
+- "Stop the shutter"

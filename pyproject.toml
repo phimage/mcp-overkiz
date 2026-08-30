@@ -1,7 +1,7 @@
 [project]
 name = "mcp-overkiz"
-version = "0.1.2"
-description = "MCP server for controlling lights using overkiz"
+version = "0.2.0"
+description = "MCP server for controlling lights and shutters using overkiz"
 readme = "README.md"
 requires-python = ">=3.13.3"
 dependencies = [ 
